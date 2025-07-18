@@ -1,56 +1,53 @@
 <?php
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $uploadDir = 'Données/'; // Répertoire où les photos seront stockées
-    $uploadFile = $uploadDir . basename($_FILES['userfile']['name']);
+    // Vérification de l'existence du fichier
+    if (isset($_FILES['photo']) && isset($_POST['auteur'])) {
+        $photo = $_FILES['photo'];
+        $auteur = htmlspecialchars($_POST['auteur']);
+        $extension = pathinfo($photo['name'], PATHINFO_EXTENSION);
 
-    // Regarde si la photo est correcte
-    $check = getimagesize($_FILES['userfile']['tmp_name']);
-    if ($check === false) {
-        die("ce n'est pas une image.");
-    }
+        // Récupérer la date actuelle au format souhaité
+        $date = date('YmdHis');
+        $nom_fichier = $date . '-' . $auteur . '-' . basename($photo['name']);
 
-    // Regarde la taille du fichier (limite de 5 Mo)
-    if ($_FILES['userfile']['size'] > 5000000) {
-        die("Le fichier est trop volumineux.");
-    }
+        // Chemin du dossier de destination
+        $dossier = 'uploads/';
+        $chemin_complet = $dossier . $nom_fichier;
 
-    // Autoriser certains formats de fichiers
-    $imageFileType = strtolower(pathinfo($uploadFile, PATHINFO_EXTENSION));
-    $allowedTypes = ['jpg', 'jpeg', 'png', 'gif'];
-    if (!in_array($imageFileType, $allowedTypes)) {
-        die("Only JPG, JPEG, PNG & GIF files are allowed.");
+        // Déplacer le fichier téléchargé
+        if (move_uploaded_file($photo['tmp_name'], $chemin_complet)) {
+            echo "<p>La photo a bien été téléchargée !</p>";
+            echo "<p><a href='index.php'>Retour à l'accueil</a></p>";
+        } else {
+            echo "<p>Erreur lors du téléchargement de la photo.</p>";
+        }
     }
-
-    // Déplace le fichier téléchargé vers le répertoire désigné
-    if (move_uploaded_file($_FILES['userfile']['tmp_name'], $uploadFile)) {
-        echo "Le fichier est valide et a été téléchargé avec succès.\n";
-    } else {
-        echo "Possible attaque de téléchargement de fichier !\n";
-    }
-}/*
-// Affiche poster une photo
-if (isset($_FILES['userfile'])) {
-    echo '<p>Merci de poster vos photos !</p>';
-    get_photos('Données/'); // Appel de la fonction pour récupérer les photos
-    // Rediriger vers la page d'accueil
-    header('Location: index.php');
-    exit;
 }
-// Affiche poster une vidéo
-if (isset($_FILES['videofile'])) {
-    echo '<p>Merci de poster vos vidéos !</p>';
-    get_browser(dir('Données/')); // Appel de la fonction pour récupérer les vidéos
-    // Rediriger vers la page d'accueil
-    header('Location: index.php');
-    exit;
-}
-// Affiche poster une story
-if (isset($_FILES['storyfile'])) {
-    echo '<p>Merci de poster vos stories !</p>';
-    get_browser('Données/'); // Appel de la fonction pour récupérer les stories
-    // Rediriger vers la page d'accueil
-    header('Location: index.php');
-    exit;
-}
-?> */
 ?>
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Publier une photo</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <h1>Publier une photo</h1>
+
+    <form action="upload.php" method="POST" enctype="multipart/form-data">
+        <label for="auteur">Votre nom : </label>
+        <input type="text" id="auteur" name="auteur" required><br><br>
+
+        <label for="photo">Sélectionner une photo : </label>
+        <input type="file" id="photo" name="photo" accept="image/*" required><br><br>
+
+        <button type="submit">Publier</button>
+    </form>
+
+    <p><a href="index.php">Retour à l'accueil</a></p>
+
+</body>
+</html>
